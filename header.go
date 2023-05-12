@@ -1,86 +1,49 @@
 package sloglm
 
 import (
-	"bytes"
-	"time"
+	"strings"
+	"sync"
+	"sync/atomic"
 
+	"git.fractalqb.de/fractalqb/sllm/v2"
 	"golang.org/x/exp/slog"
 )
 
-type HeaderFunc func(*bytes.Buffer, slog.Record) error
+type HeaderFunc func([]byte, slog.Record) ([]byte, error)
 
-func DefaultHeader(w *bytes.Buffer, r slog.Record) error {
-	fmtTs(w, r.Time, Tdefault)
-	w.WriteByte(' ')
-	w.WriteString(r.Level.String())
-	w.WriteByte(' ')
-	return nil
+type Header struct {
+	time     sllm.TimeFormat
+	lvlLen   int32
+	lvlFill  atomic.Value
+	lvlMutex sync.Mutex
 }
 
-func itoa(buf *bytes.Buffer, i, w int) {
-	if i < 0 {
-		buf.WriteByte('-')
-	}
-	uitoa(buf, -i, w)
+func NewHeader(t sllm.TimeFormat) *Header {
+	h := &Header{time: t, lvlLen: 0}
+	h.lvlFill.Store("")
+	return h
 }
 
-func uitoa(buf *bytes.Buffer, i, w int) {
-	var tmp [20]byte
-	wp := 19
-	for i > 9 {
-		q := i / 10
-		tmp[wp] = byte('0' + i - 10*q)
-		wp--
-		w--
-		i = q
-	}
-	tmp[wp] = byte('0' + i)
-	for w > 1 {
-		wp--
-		tmp[wp] = '0'
-		w--
-	}
-	buf.Write(tmp[wp:])
-}
-
-type timeFormat uint
-
-const (
-	Tdate = 1 << iota
-	Tyear
-	TUTC
-	Tmillis
-	Tmicros
-)
-
-const Tdefault = Tdate
-
-func fmtTs(buf *bytes.Buffer, t time.Time, fmt timeFormat) {
-	if fmt&TUTC != 0 {
-		t = t.UTC()
-	}
-	if fmt&Tdate != 0 {
-		ye, mo, dy := t.Date()
-		if fmt&Tyear != 0 {
-			uitoa(buf, ye, 4)
-			buf.WriteByte(' ')
+func (hdr *Header) Append(w []byte, r slog.Record) ([]byte, error) {
+	(*sllm.ArgWriter)(&w).WriteTime(r.Time, hdr.time)
+	w = append(w, " ["...)
+	level := r.Level.String()
+	w = append(w, level...)
+	w = append(w, "] "...)
+	if ll := atomic.LoadInt32(&hdr.lvlLen); len(level) < int(ll) {
+		fill := hdr.lvlFill.Load().(string)
+		w = append(w, fill[:int(ll)-len(level)]...)
+	} else if len(level) > int(ll) {
+		hdr.lvlMutex.Lock()
+		fill := hdr.lvlFill.Load().(string)
+		if l := len(level); l > len(fill) {
+			fill = strings.Repeat(" ", l)
+			hdr.lvlFill.Store(fill)
+			atomic.StoreInt32(&hdr.lvlLen, int32(l))
 		}
-		buf.WriteString(mo.String()[:3])
-		buf.WriteByte(' ')
-		uitoa(buf, dy, 2)
-		buf.WriteByte(' ')
+		hdr.lvlMutex.Unlock()
 	}
-	ho, mi, sc := t.Clock()
-	uitoa(buf, ho, 2)
-	buf.WriteByte(':')
-	uitoa(buf, mi, 2)
-	buf.WriteByte(':')
-	uitoa(buf, sc, 2)
-	if fmt&Tmicros != 0 {
-		buf.WriteByte('.')
-		uitoa(buf, t.Nanosecond()/1000, 6)
-	} else if fmt&Tmillis != 0 {
-		buf.WriteByte('.')
-		uitoa(buf, t.Nanosecond()/1000000, 3)
-	}
+	return w, nil
 }
+
+func DefaultHeader() HeaderFunc { return NewHeader(sllm.Tdefault).Append }
