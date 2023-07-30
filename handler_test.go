@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"git.fractalqb.de/fractalqb/sllm/v2"
+	"git.fractalqb.de/fractalqb/sllm/v3"
 	"golang.org/x/exp/slog"
 )
 
