@@ -2,13 +2,14 @@ package sloglm
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
 
 	"git.fractalqb.de/fractalqb/sllm/v3"
-	"golang.org/x/exp/slog"
 )
 
 func Example() {
@@ -71,7 +72,7 @@ func BenchmarkDefaultHeaderFast(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		logger.LogAttrs(nil, slog.LevelInfo,
+		logger.LogAttrs(context.Background(), slog.LevelInfo,
 			"added `count` x `item` to shopping cart by `user`",
 			slog.Int("count", 7),
 			slog.String("item", "Hat"),
@@ -108,7 +109,7 @@ func BenchmarkSlogJSON(b *testing.B) {
 	}
 }
 
-func ExampleCompareOutputs() {
+func Example_compareOutputs() {
 	const form = "added `count` x `item` to shopping cart by `user`"
 	args := []any{"count", 7, "item", "Hat", "user", "John Doe"}
 	opts := slog.HandlerOptions{Level: &slog.LevelVar{}, AddSource: true}
@@ -156,7 +157,7 @@ func BenchmarkAttrLookup(b *testing.B) {
 	b.Run("index match", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			buf.Reset()
-			logger.LogAttrs(nil, slog.LevelInfo, form,
+			logger.LogAttrs(context.Background(), slog.LevelInfo, form,
 				level, at, about, duration,
 				p1, p2, p3, p4, p5,
 			)
@@ -166,7 +167,7 @@ func BenchmarkAttrLookup(b *testing.B) {
 	b.Run("index mismatch", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			buf.Reset()
-			logger.LogAttrs(nil, slog.LevelInfo, form,
+			logger.LogAttrs(context.Background(), slog.LevelInfo, form,
 				p1, p5, p4, p3, p2,
 				duration, about, at, level,
 			)

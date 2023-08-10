@@ -1,5 +1,4 @@
 git.fractalqb.de/fractalqb/catch v0.3.0 h1:Gq2b4k3O4+8joTlXLx8thcwYU0FkRGnZgDAoalAs4dM=
+git.fractalqb.de/fractalqb/catch v0.3.0/go.mod h1:zXovejd5jSkpUrfb5N5wuGqfhoP419f7IjdK+JKIbeE=
 git.fractalqb.de/fractalqb/sllm/v3 v3.0.0-alpha h1:b5OETFiC1b7ucoGHkrvMdCQCcunMzIHkiONEmAKaoQQ=
 git.fractalqb.de/fractalqb/sllm/v3 v3.0.0-alpha/go.mod h1:XoVaCdXQr66Zng3tvdNfyHfjAqszBCNAL/Pje1crqSo=
-golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 h1:k/i9J1pBpvlfR+9QsetwPyERsqu1GIbi967PQMq3Ivc=
-golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1/go.mod h1:V1LtkGg67GoY2N1AnLN78QLrzxkLyJw7RJb1gzOOz9w=

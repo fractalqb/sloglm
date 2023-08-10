@@ -6,13 +6,13 @@ import (
 	"encoding"
 	"fmt"
 	"io"
+	"log/slog"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 
 	"git.fractalqb.de/fractalqb/sllm/v3"
-	"golang.org/x/exp/slog"
 )
 
 var DefaultOptions = slog.HandlerOptions{

@@ -1,12 +1,12 @@
 package sloglm
 
 import (
+	"log/slog"
 	"strings"
 	"sync"
 	"sync/atomic"
 
 	"git.fractalqb.de/fractalqb/sllm/v3"
-	"golang.org/x/exp/slog"
 )
 
 type HeaderFunc func([]byte, slog.Record) ([]byte, error)
