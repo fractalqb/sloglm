@@ -27,13 +27,10 @@ func TestParseTS(t *testing.T) {
 			t.Fatalf("panic tfmt=%[1]b(%[1]d) ts='%s': %v", tfmt, string(buf), p)
 		}
 	}()
-	const end = sllm.Tmicros << 1
+	const end = sllm.TMicros << 1
 	for ; tfmt < end; tfmt++ {
 		buf = buf[:0]
-		_, err := (*sllm.ArgWriter)(&buf).WriteTime(ts, tfmt)
-		if err != nil {
-			t.Errorf("writing ts %s: %s", ts, err)
-		}
+		buf = tfmt.Fmt(ts).AppendSllm(buf)
 		if len(buf) == 0 {
 			continue
 		}
@@ -42,10 +39,10 @@ func TestParseTS(t *testing.T) {
 			t.Errorf("'%s': %s", string(buf), err)
 		} else {
 			expect := ts
-			if tfmt&sllm.Tmicros != 0 {
+			if tfmt&sllm.TMicros != 0 {
 				expect = expect.Round(time.Microsecond)
 				us = us.Round(time.Microsecond)
-			} else if tfmt&sllm.Tmillis != 0 {
+			} else if tfmt&sllm.TMillis != 0 {
 				expect = expect.Round(time.Millisecond)
 				us = us.Round(time.Millisecond)
 			} else {

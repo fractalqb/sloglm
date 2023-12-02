@@ -3,7 +3,6 @@ package sloglm
 import (
 	"bytes"
 	"context"
-	"encoding"
 	"fmt"
 	"io"
 	"log/slog"
@@ -65,7 +64,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) (err error) {
 	if r.NumAttrs() == 0 {
 		pstat.buf = append(pstat.buf, r.Message...)
 	} else {
-		pstat.buf, err = sllm.Expand(pstat.buf, r.Message, pstat.print)
+		pstat.buf, err = sllm.Append(pstat.buf, r.Message, pstat.print)
 		if err != nil {
 			return err
 		}
@@ -161,12 +160,12 @@ NEXT_NAME:
 	return idx, att
 }
 
-func (ap *printState) print(wr *sllm.ArgWriter, idx int, name string) (n int, err error) {
+func (ap *printState) print(to []byte, idx int, name string) ([]byte, error) {
 	var att slog.Attr
 	if name[0] == '.' { // TODO sllm does not support empty names – riksy?
 		var i int
 		if i, att = ap.attPath(idx, name); i < 0 {
-			return 0, fmt.Errorf("no argument %d", idx)
+			return to, fmt.Errorf("no argument %d", idx)
 		}
 		idx = i
 	} else if idx < len(ap.atts) && ap.atts[idx].Key == name {
@@ -174,7 +173,7 @@ func (ap *printState) print(wr *sllm.ArgWriter, idx int, name string) (n int, er
 	} else {
 		var i int
 		if i, att = ap.attName(name); i < 0 {
-			return 0, fmt.Errorf("no argument %d", idx)
+			return to, fmt.Errorf("no argument %d", idx)
 		}
 		idx = i
 	}
@@ -183,23 +182,6 @@ func (ap *printState) print(wr *sllm.ArgWriter, idx int, name string) (n int, er
 		ap.formArgs |= flag
 		ap.formNo++
 	}
-	switch att.Value.Kind() {
-	case slog.KindString:
-		n, err = wr.WriteString(att.Value.String())
-	case slog.KindInt64:
-		n, err = wr.WriteInt64(att.Value.Int64())
-	// case slog.KindTime:
-	// 	n, err = wr.WriteTime(att.Value.Time(), sllm.Tyear|sllm.Tmillis)
-	default:
-		if tm, ok := att.Value.Any().(encoding.TextMarshaler); ok {
-			var data []byte
-			data, err = tm.MarshalText()
-			if err == nil {
-				n, err = wr.Write(data)
-			}
-		} else {
-			n, err = fmt.Fprint(wr, att.Value.Any())
-		}
-	}
-	return
+	to = sllm.AppendArg(to, att.Value.Any())
+	return to, nil
 }

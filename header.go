@@ -25,7 +25,7 @@ func NewHeader(t sllm.TimeFormat) *Header {
 }
 
 func (hdr *Header) Append(w []byte, r slog.Record) ([]byte, error) {
-	(*sllm.ArgWriter)(&w).WriteTime(r.Time, hdr.time)
+	w = hdr.time.Fmt(r.Time).AppendSllm(w)
 	w = append(w, " ["...)
 	level := r.Level.String()
 	w = append(w, level...)
@@ -46,4 +46,4 @@ func (hdr *Header) Append(w []byte, r slog.Record) ([]byte, error) {
 	return w, nil
 }
 
-func DefaultHeader() HeaderFunc { return NewHeader(sllm.Tdefault).Append }
+func DefaultHeader() HeaderFunc { return NewHeader(sllm.TDefault).Append }

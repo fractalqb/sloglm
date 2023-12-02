@@ -17,7 +17,7 @@ func Example() {
 	logger := slog.New(NewHandler(os.Stdout, nil, nil))
 	logger.Info("A `level` message `at` `about` and `.about.bar`",
 		"level", slog.LevelInfo,
-		"at", t,
+		"at", sllm.TDefault.Fmt(t),
 		"level", 7,
 		"about", slog.GroupValue(
 			slog.Bool("foo", true),
@@ -26,7 +26,7 @@ func Example() {
 		),
 	)
 	// Output:
-	// A `level:INFO` message `at:2023-05-04T20:30:40Z` `about:[foo=true bar=4711 baz=3.14159]` and `.about.bar:4711` (level=7)
+	// A `level:INFO` message `at:05-04 Th 20:30:40` `about:[foo=true bar=4711 baz=3.14159]` and `.about.bar:4711` (level=7)
 }
 
 func simpleHeader(w []byte, r slog.Record) ([]byte, error) {
@@ -125,7 +125,7 @@ func Example_compareOutputs() {
 
 	logger = slog.New(NewHandler(
 		os.Stdout,
-		NewHeader(sllm.Tdefault|sllm.Tyear).Append,
+		NewHeader(sllm.TDefault|sllm.TYear).Append,
 		&opts,
 	))
 	fmt.Println("sllm:")
@@ -145,10 +145,10 @@ func BenchmarkAttrLookup(b *testing.B) {
 		about    = slog.String("about", "something")
 		duration = slog.Duration("duration", 5*time.Minute)
 		p1       = slog.Int("p1", 1)
-		p2       = slog.Int("p2", 1)
-		p3       = slog.Int("p3", 1)
-		p4       = slog.Int("p4", 1)
-		p5       = slog.Int("p5", 1)
+		p2       = slog.Int("p2", 2)
+		p3       = slog.Int("p3", 3)
+		p4       = slog.Int("p4", 4)
+		p5       = slog.Int("p5", 5)
 	)
 	var buf bytes.Buffer
 	logger := slog.New(NewHandler(&buf, DefaultHeader(), nil))
